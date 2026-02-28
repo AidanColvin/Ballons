@@ -1,67 +1,687 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Balloons</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>BALLONS</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: #fdf5e8;
+  height: 100dvh; width: 100vw;
+  overflow: hidden;
+  font-family: 'Barlow Condensed', sans-serif;
+  user-select: none; -webkit-user-select: none;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* ── SCREENS ── */
+.screen {
+  position: fixed; inset: 0; z-index: 500;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: #fdf5e8;
+  padding: 20px 20px;
+}
+.screen.hidden { display: none; }
+
+/* ── TITLE ── */
+.game-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 300;
+  font-size: clamp(68px, 17vw, 118px);
+  color: #2a1f14;
+  letter-spacing: 6px;
+  line-height: 1;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+/* ── BALLOON STAGE ── */
+.balloon-stage {
+  position: relative;
+  width: 160px; height: 250px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+.balloon-stage svg { position: absolute; top: 0; left: 0; }
+
+/* ── SCORE TABLE — transparent, on cream ── */
+.score-table {
+  background: transparent;
+  padding: 0 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px 32px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 300px;
+}
+.score-row {
+  display: flex; align-items: center; gap: 9px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: clamp(15px, 3.4vw, 18px);
+  letter-spacing: 1px;
+  color: #2a1f14;
+}
+.s-dot {
+  width: 18px; height: 18px;
+  border-radius: 50%; flex-shrink: 0;
+  flex-shrink: 0;
+}
+
+/* ── BUTTONS ── */
+.go-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: clamp(22px, 5vw, 30px);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #fdf5e8;
+  background: #2a1f14;
+  border: none;
+  border-radius: 50px;
+  padding: 13px 58px;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.1s;
+}
+.go-btn:active { transform: scale(0.95); background: #4a3828; }
+
+/* ── GAME CANVAS ── */
+#canvas { position: fixed; inset: 0; z-index: 5; }
+
+/* ── HUD ── */
+#hud {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 14px 24px 10px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  pointer-events: none;
+}
+.hud-block { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.hud-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase; color: #c8b090;
+}
+.hud-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 300;
+  font-size: clamp(40px, 9vw, 64px);
+  color: #2a1f14; line-height: 1;
+  letter-spacing: 1px;
+  transition: transform 0.15s;
+}
+#score-val.neg { color: #cc1a1a; }
+
+/* ── DANGER BAR ── */
+#danger-bar-wrap {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
+  height: 5px; background: #ecddc8;
+  pointer-events: none;
+}
+#danger-bar {
+  height: 100%;
+  background: #cc1a1a;
+  transition: width 0.4s;
+  width: 0%;
+}
+
+/* ── FLOATING POINTS ── */
+.float-pts {
+  position: fixed; pointer-events: none; z-index: 300;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: clamp(20px, 5vw, 30px);
+  animation: fUp 0.9s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+@keyframes fUp {
+  0%  { opacity:1; transform:translateY(0) scale(1); }
+  60% { opacity:1; transform:translateY(-44px) scale(1.1); }
+  100%{ opacity:0; transform:translateY(-80px) scale(0.9); }
+}
+
+/* ── END SCREEN ── */
+.end-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 300;
+  font-size: clamp(50px, 12vw, 86px);
+  color: #2a1f14;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.end-score-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 3.5px; text-transform: uppercase;
+  color: #c8b090; margin-bottom: 0;
+}
+.end-score-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 300;
+  font-size: clamp(72px, 18vw, 112px);
+  letter-spacing: 2px;
+  line-height: 1; margin-bottom: 14px;
+}
+</style>
 </head>
 <body>
 
-<div id="score-board" style="display:none;">
-    Score: <span id="score-value">0</span>
+<!-- ═══ START SCREEN ═══ -->
+<div id="start-screen" class="screen">
+  <div class="balloon-stage" id="start-balloon-wrap">
+    <svg id="start-balloon-svg" width="160" height="250" viewBox="0 0 160 250">
+      <defs>
+        <radialGradient id="redDepth" cx="60%" cy="60%" r="70%">
+          <stop offset="0%" stop-color="rgba(0,0,0,0)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,0.12)"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="80" cy="88" rx="68" ry="80" fill="#e82020"/>
+      <ellipse cx="80" cy="88" rx="68" ry="80" fill="url(#redDepth)"/>
+      <ellipse cx="54" cy="52" rx="20" ry="28" fill="rgba(255,255,255,0.32)" transform="rotate(-20 54 52)"/>
+      <path d="M73 167 Q80 178 87 167" stroke="#b01010" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M80 180 Q66 208 78 232 Q88 246 80 250" stroke="#c01515" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <h1 class="game-title">BALLONS</h1>
+
+  <div class="score-table">
+    <div class="score-row"><div class="s-dot" style="background:#2196f3"></div>Blue &nbsp;+3</div>
+    <div class="score-row"><div class="s-dot" style="background:#9c27b0"></div>Purple +2</div>
+    <div class="score-row"><div class="s-dot" style="background:#7daa6e"></div>Green &nbsp;+1</div>
+    <div class="score-row"><div class="s-dot" style="background:#e8c98a;outline:1.5px solid #c8a860;outline-offset:-1px;border-radius:50%"></div>Cream &nbsp;0</div>
+    <div class="score-row"><div class="s-dot" style="background:#ffeb3b"></div>Yellow −1</div>
+    <div class="score-row"><div class="s-dot" style="background:#c0522a"></div>Rust &nbsp; −2</div>
+    <div class="score-row"><div class="s-dot" style="background:#e82020"></div>Red &nbsp;&nbsp; −3</div>
+  </div>
+
+  <button class="go-btn" id="go-btn">GO</button>
 </div>
 
-<div id="scene">
-    <div id="flash"></div>
+<!-- ═══ GAME ═══ -->
+<canvas id="canvas"></canvas>
+<div id="hud" style="display:none">
+  <div class="hud-block">
+    <div class="hud-label">Score</div>
+    <div class="hud-val" id="score-val">0</div>
+  </div>
+  <div class="hud-block">
+    <div class="hud-label">Best</div>
+    <div class="hud-val" id="best-val">0</div>
+  </div>
+</div>
+<div id="danger-bar-wrap" style="display:none"><div id="danger-bar"></div></div>
 
-    <div id="balloon-group">
-        <svg id="balloon-svg" width="90" height="150" viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="45" cy="48" rx="40" ry="46" fill="#d32f2f"/>
-            <ellipse cx="30" cy="25" rx="12" ry="16" fill="rgba(255,255,255,0.22)" transform="rotate(-20 30 25)"/>
-            <path d="M41 93 Q45 100 49 93" stroke="#b71c1c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <path d="M45 101 Q38 118 46 132 Q52 143 45 150" stroke="#c0392b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        </svg>
-    </div>
+<!-- ═══ END SCREEN ═══ -->
+<div id="end-screen" class="screen hidden">
+  <div class="balloon-stage" id="end-balloon-wrap">
+    <svg id="end-balloon-svg" width="160" height="250" viewBox="0 0 160 250">
+      <defs>
+        <radialGradient id="blueDepth" cx="60%" cy="60%" r="70%">
+          <stop offset="0%" stop-color="rgba(0,0,0,0)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,0.12)"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="80" cy="88" rx="68" ry="80" fill="#2196f3"/>
+      <ellipse cx="80" cy="88" rx="68" ry="80" fill="url(#blueDepth)"/>
+      <ellipse cx="54" cy="52" rx="20" ry="28" fill="rgba(255,255,255,0.32)" transform="rotate(-20 54 52)"/>
+      <path d="M73 167 Q80 178 87 167" stroke="#1565c0" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M80 180 Q66 208 78 232 Q88 246 80 250" stroke="#1976d2" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="end-title">Game Over</div>
+  <div class="end-score-label">Your Score</div>
+  <div class="end-score-num" id="end-score-num">0</div>
+  <button class="go-btn" id="again-btn">Again</button>
 </div>
 
-<script type="module">
-    import { startSpawning } from './game.js';
-    import { triggerFlash, showGameUI } from './ui.js';
+<script>
+// ─────────────────────────────────────────────
+// BALLOON TYPES
+// pts >= 1  = good (missing them costs −2)
+// pts == 0  = neutral (no miss penalty)
+// pts < 0   = bad
+// ─────────────────────────────────────────────
+const TYPES = [
+  { id:'blue',   fill:'#2196f3', hi:'#90caf9', knot:'#1565c0', str:'#1976d2', pts:+3, baseW:8  },
+  { id:'purple', fill:'#9c27b0', hi:'#ce93d8', knot:'#6a1b9a', str:'#7b1fa2', pts:+2, baseW:10 },
+  { id:'green',  fill:'#7daa6e', hi:'#b5d4aa', knot:'#4a7a3a', str:'#4a7a3a', pts:+1, baseW:13 },
+  { id:'cream',  fill:'#e8c98a', hi:'#f5e4b8', knot:'#b8922a', str:'#b8922a', pts: 0, baseW:11 },
+  { id:'yellow', fill:'#ffeb3b', hi:'#fff9c4', knot:'#f9a825', str:'#f9a825', pts:-1, baseW:13 },
+  { id:'orange', fill:'#c0522a', hi:'#e08a6a', knot:'#8a2800', str:'#8a2800', pts:-2, baseW:10 },
+  { id:'red',    fill:'#e82020', hi:'#ef9a9a', knot:'#b01010', str:'#c01515', pts:-3, baseW:8  },
+];
 
-    const balloonGroup = document.getElementById('balloon-group');
-    let popped = false;
+// ─────────────────────────────────────────────
+// CANVAS + STATE
+// ─────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
 
-    /**
-     * monitors the intro balloon position
-     * triggers the transition to gameplay when off-screen
-     */
-    function checkIntroPop() {
-        if (popped) return;
-        const rect = balloonGroup.getBoundingClientRect();
-        
-        if (rect.bottom <= 0) {
-            popped = true;
-            transitionToGame();
-            return;
-        }
-        requestAnimationFrame(checkIntroPop);
+let balloons=[], score=0, running=false;
+let spawnTout=null, raf=null;
+let highScore = parseInt(localStorage.getItem('ballons_hi')||'0');
+const LOSE_THRESHOLD = -25;
+const MISS_PENALTY   = -2;   // penalty per missed good balloon
+
+// ─────────────────────────────────────────────
+// DIFFICULTY (score-driven)
+// ─────────────────────────────────────────────
+function getDiff(){
+  const t = Math.max(0, score);
+  const iv       = Math.max(500,  2400 - t*26);
+  const sp       = Math.min(4.2,  0.72 + t*0.038); // raised base speed
+  const badBoost = Math.min(3.2,  1    + t*0.042);
+  const badSize  = Math.min(1.9,  1    + t*0.016);
+  return { iv, sp, badBoost, badSize, mn:34, mx:72 };
+}
+
+function pickType(d){
+  const pool = TYPES.map(t=>({...t, w: t.pts>=0 ? t.baseW : t.baseW*d.badBoost}));
+  const total = pool.reduce((s,t)=>s+t.w,0);
+  let r = Math.random()*total;
+  for(const t of pool){ r-=t.w; if(r<=0) return t; }
+  return pool[0];
+}
+
+// ─────────────────────────────────────────────
+// DRAW BALLOON
+// ─────────────────────────────────────────────
+function drawBalloon(b){
+  const t=b.type, r=b.r;
+  ctx.save();
+  ctx.translate(b.x, b.y);
+  ctx.rotate(b.sway * Math.sin(b.phase) * 0.048);
+
+  const rx=r*0.84, ry=r;
+
+  // drop shadow
+  ctx.beginPath();
+  ctx.ellipse(3,7,rx*0.84,ry*0.84,0,0,Math.PI*2);
+  ctx.fillStyle='rgba(100,70,30,0.09)';
+  ctx.fill();
+
+  // body
+  ctx.beginPath();
+  ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2);
+  ctx.fillStyle=t.fill;
+  ctx.fill();
+
+  // depth shade
+  const dg=ctx.createRadialGradient(rx*0.18,ry*0.18,ry*0.25,0,0,ry*1.05);
+  dg.addColorStop(0,'rgba(0,0,0,0)');
+  dg.addColorStop(1,'rgba(0,0,0,0.11)');
+  ctx.beginPath();
+  ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2);
+  ctx.fillStyle=dg;
+  ctx.fill();
+
+  // highlight oval — upper left
+  ctx.save();
+  ctx.translate(-rx*0.20,-ry*0.28);
+  ctx.rotate(-0.30);
+  ctx.beginPath();
+  ctx.ellipse(0,0,rx*0.28,ry*0.20,0,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.38)';
+  ctx.fill();
+  ctx.restore();
+
+  // knot
+  const ky=ry+3;
+  ctx.beginPath();
+  ctx.arc(0,ky,3.5,0,Math.PI*2);
+  ctx.fillStyle=t.knot;
+  ctx.fill();
+
+  // string — S-curve
+  const sl=r*1.6;
+  ctx.beginPath();
+  ctx.moveTo(0,ky+3);
+  ctx.bezierCurveTo(-8,ky+sl*0.35, 8,ky+sl*0.65, 0,ky+sl+4);
+  ctx.strokeStyle=t.str;
+  ctx.lineWidth=1.5;
+  ctx.globalAlpha=0.55;
+  ctx.stroke();
+  ctx.globalAlpha=1;
+  ctx.restore();
+}
+
+// ─────────────────────────────────────────────
+// SPAWN
+// ─────────────────────────────────────────────
+function spawnBalloon(){
+  if(!running) return;
+  const d    = getDiff();
+  const type = pickType(d);
+  const isBad = type.pts < 0;
+  const baseR = d.mn + Math.random()*(d.mx-d.mn);
+  const r     = Math.min(isBad ? baseR*d.badSize : baseR, 92);
+  const mg    = r*1.3;
+  const x     = mg + Math.random()*(canvas.width - mg*2);
+  const vy    = (0.65+Math.random()*0.70)*d.sp;
+
+  balloons.push({
+    type, x,
+    y: canvas.height + r + 60,
+    r, vy,
+    sway:  0.4+Math.random()*0.8,
+    phase: Math.random()*Math.PI*2,
+    ps:    0.016+Math.random()*0.018,
+    popping:false, popS:1,
+  });
+
+  spawnTout = setTimeout(spawnBalloon, d.iv*(0.65+Math.random()*0.70));
+}
+
+// ─────────────────────────────────────────────
+// GAME LOOP
+// ─────────────────────────────────────────────
+function loop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  for(let i=balloons.length-1;i>=0;i--){
+    const b=balloons[i];
+
+    if(b.popping){
+      b.popS+=0.10;
+      const al=Math.max(0,1-(b.popS-1)/0.55);
+      ctx.save();
+      ctx.globalAlpha=al;
+      ctx.translate(b.x,b.y);
+      ctx.scale(b.popS,b.popS);
+      ctx.translate(-b.x,-b.y);
+      drawBalloon(b);
+      ctx.restore();
+      if(b.popS>=1.55) balloons.splice(i,1);
+      continue;
     }
 
-    /**
-     * handles the visual transition
-     * pops the flash and starts the game logic
-     */
-    function transitionToGame() {
-        balloonGroup.style.display = 'none';
-        triggerFlash();
-        showGameUI();
-        // start the modular game loop
-        startSpawning();
+    b.y     -= b.vy;
+    b.phase += b.ps;
+
+    // balloon escaped off the top
+    if(b.y + b.r + 80 < 0){
+      // PENALTY: only for good balloons (pts >= 1)
+      if(b.type.pts >= 1){
+        addScore(MISS_PENALTY);
+        showMissPenalty(b.x);
+      }
+      balloons.splice(i,1);
+      continue;
     }
 
-    // Start monitoring after the initial delay
-    setTimeout(() => requestAnimationFrame(checkIntroPop), 800);
+    drawBalloon(b);
+  }
+
+  if(running) raf=requestAnimationFrame(loop);
+}
+
+// ─────────────────────────────────────────────
+// INPUT
+// ─────────────────────────────────────────────
+function tryPop(cx,cy){
+  if(!running) return;
+  ripple(cx,cy);
+  for(let i=balloons.length-1;i>=0;i--){
+    const b=balloons[i];
+    if(b.popping) continue;
+    const dx=cx-b.x, dy=cy-b.y;
+    if(Math.sqrt(dx*dx+dy*dy)<b.r*1.08){
+      b.popping=true;
+      addScore(b.type.pts);
+      floatPts(b.x, b.y-b.r*0.5, b.type.pts);
+      burst(b.x, b.y, b.type.fill);
+      break;
+    }
+  }
+}
+canvas.addEventListener('click', e=>tryPop(e.clientX,e.clientY));
+canvas.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  for(const t of e.changedTouches) tryPop(t.clientX,t.clientY);
+},{passive:false});
+
+// ─────────────────────────────────────────────
+// SCORE
+// ─────────────────────────────────────────────
+const scoreEl   = document.getElementById('score-val');
+const bestEl    = document.getElementById('best-val');
+const dangerBar = document.getElementById('danger-bar');
+
+function addScore(d){
+  score += d;
+  scoreEl.textContent = score;
+  scoreEl.classList.toggle('neg', score<0);
+  scoreEl.style.transform='scale(1.28)';
+  setTimeout(()=>scoreEl.style.transform='',180);
+
+  const pct = Math.min(100, Math.max(0, (-score/25)*100));
+  dangerBar.style.width = pct+'%';
+
+  if(score > highScore){
+    highScore = score;
+    localStorage.setItem('ballons_hi', highScore);
+    bestEl.textContent = highScore;
+  }
+
+  if(score <= LOSE_THRESHOLD) endGame();
+}
+
+// ─────────────────────────────────────────────
+// VISUAL EFFECTS
+// ─────────────────────────────────────────────
+function floatPts(x,y,pts){
+  const el=document.createElement('div');
+  el.className='float-pts';
+  el.textContent = pts>0 ? `+${pts}` : pts===0 ? '·' : `${pts}`;
+  el.style.color = pts>0 ? '#3a7d2a' : pts<0 ? '#cc1a1a' : '#a09080';
+  el.style.left  = (x-14)+'px';
+  el.style.top   = (y-10)+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 900);
+}
+
+// red "−2 missed" label at the top edge where balloon escaped
+function showMissPenalty(x){
+  const el=document.createElement('div');
+  el.className='float-pts';
+  el.textContent=`${MISS_PENALTY} missed`;
+  el.style.color='#cc1a1a';
+  el.style.fontSize='clamp(14px,3vw,18px)';
+  el.style.left = Math.max(10, Math.min(window.innerWidth-80, x-30))+'px';
+  el.style.top  = '60px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 900);
+}
+
+function burst(x,y,color){
+  for(let i=0;i<9;i++){
+    const p=document.createElement('div');
+    const sz=5+Math.random()*11;
+    p.style.cssText=`position:fixed;border-radius:50%;pointer-events:none;z-index:300;
+      background:${color};width:${sz}px;height:${sz}px;left:${x}px;top:${y}px;`;
+    document.body.appendChild(p);
+    const ang=Math.random()*Math.PI*2, spd=2.5+Math.random()*6;
+    let px=x,py=y,vx=Math.cos(ang)*spd,vy=Math.sin(ang)*spd,f=0;
+    (function a(){
+      vy+=0.22; px+=vx; py+=vy; f++;
+      const al=1-f/30; if(al<=0){p.remove();return;}
+      p.style.left=px+'px'; p.style.top=py+'px'; p.style.opacity=al;
+      requestAnimationFrame(a);
+    })();
+  }
+}
+
+// ripple on tap
+const rs=document.createElement('style');
+rs.textContent=`@keyframes rip{from{width:8px;height:8px;opacity:.45;margin:-4px 0 0 -4px}to{width:70px;height:70px;opacity:0;margin:-35px 0 0 -35px}}`;
+document.head.appendChild(rs);
+function ripple(x,y){
+  const r=document.createElement('div');
+  r.style.cssText=`position:fixed;border-radius:50%;pointer-events:none;z-index:250;
+    border:1.5px solid rgba(42,31,20,0.20);left:${x}px;top:${y}px;animation:rip 0.38s ease-out forwards;`;
+  document.body.appendChild(r);
+  setTimeout(()=>r.remove(), 400);
+}
+
+// ─────────────────────────────────────────────
+// SCREEN BALLOON POP ANIMATION
+// ─────────────────────────────────────────────
+function popBalloonEl(wrapId, svgId, ballColor, onDone){
+  const wrap = document.getElementById(wrapId);
+  const svg  = document.getElementById(svgId);
+
+  // add sway once
+  if(!svg._swaying){
+    svg._swaying=true;
+    const sw=document.createElement('style');
+    sw.textContent=`@keyframes svgSway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}`;
+    document.head.appendChild(sw);
+    svg.style.animation='svgSway 2s ease-in-out infinite';
+    svg.style.transformOrigin='bottom center';
+  }
+
+  // position fixed so it can float away
+  const rect   = wrap.getBoundingClientRect();
+  const startY = rect.top;
+  wrap.style.position='fixed';
+  wrap.style.left=rect.left+'px';
+  wrap.style.top=startY+'px';
+  wrap.style.width=rect.width+'px';
+  wrap.style.margin='0';
+
+  let y=0;
+  function rise(){
+    y-=2.0;
+    wrap.style.top=(startY+y)+'px';
+    if(startY+y < -260) doPop();
+    else requestAnimationFrame(rise);
+  }
+  requestAnimationFrame(rise);
+
+  function doPop(){
+    wrap.style.display='none';
+
+    // colour flash
+    const fl=document.createElement('div');
+    fl.style.cssText=`position:fixed;inset:0;background:${ballColor};opacity:0;
+      pointer-events:none;z-index:600;border-radius:50%;`;
+    document.body.appendChild(fl);
+    const fs=document.createElement('style');
+    fs.textContent=`@keyframes flashPop{0%{opacity:0.45;transform:scale(0.4)}100%{opacity:0;transform:scale(4)}}`;
+    document.head.appendChild(fs);
+    fl.style.animation='flashPop 0.45s ease-out forwards';
+    setTimeout(()=>fl.remove(), 460);
+
+    // bouncing balls
+    const count=75;
+    const cx=window.innerWidth/2, cy=28;
+    for(let i=0;i<count;i++) setTimeout(()=>screenBall(cx,cy,ballColor), i*13);
+    setTimeout(onDone, count*13+900);
+  }
+}
+
+function screenBall(sx,sy,color){
+  const p=document.createElement('div');
+  const sz=10+Math.random()*22;
+  p.style.cssText=`position:fixed;border-radius:50%;pointer-events:none;z-index:550;
+    background:radial-gradient(circle at 33% 33%,${lighten(color)},${color});
+    box-shadow:0 3px 10px rgba(0,0,0,0.18);width:${sz}px;height:${sz}px;left:${sx}px;top:${sy}px;`;
+  document.body.appendChild(p);
+  const vx=(Math.random()-0.5)*16;
+  let vy=-3-Math.random()*10, px=sx, py=sy, f=0;
+  const grav=0.42+Math.random()*0.22, bounce=0.52+Math.random()*0.22;
+  (function a(){
+    vy+=grav; px+=vx*0.976; py+=vy;
+    if(py+sz>=window.innerHeight){py=window.innerHeight-sz;vy*=-bounce;}
+    if(px<0)px=0; if(px+sz>window.innerWidth)px=window.innerWidth-sz;
+    p.style.left=px+'px'; p.style.top=py+'px';
+    f++;
+    if(f>220){
+      const al=1-(f-220)/60;
+      p.style.opacity=Math.max(0,al);
+      if(al<=0){p.remove();return;}
+    }
+    requestAnimationFrame(a);
+  })();
+}
+
+function lighten(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgb(${Math.min(255,r+80)},${Math.min(255,g+80)},${Math.min(255,b+80)})`;
+}
+
+// ─────────────────────────────────────────────
+// START / END
+// ─────────────────────────────────────────────
+function startGame(){
+  score=0; balloons=[]; running=true;
+  scoreEl.textContent='0';
+  scoreEl.classList.remove('neg');
+  bestEl.textContent=highScore;
+  dangerBar.style.width='0%';
+
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('end-screen').classList.add('hidden');
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('danger-bar-wrap').style.display='block';
+
+  spawnBalloon();
+  raf=requestAnimationFrame(loop);
+}
+
+function endGame(){
+  running=false;
+  clearTimeout(spawnTout);
+  cancelAnimationFrame(raf);
+  balloons=[];
+
+  document.getElementById('hud').style.display='none';
+  document.getElementById('danger-bar-wrap').style.display='none';
+
+  const esn=document.getElementById('end-score-num');
+  esn.textContent=score;
+  esn.style.color=score>=0?'#2a1f14':'#cc1a1a';
+
+  // reset end balloon
+  const ew=document.getElementById('end-balloon-wrap');
+  ew.style.cssText='';
+  ew.style.display='block';
+  const esvg=document.getElementById('end-balloon-svg');
+  esvg._swaying=false;
+  esvg.style.animation='';
+
+  document.getElementById('end-screen').classList.remove('hidden');
+
+  setTimeout(()=>{
+    popBalloonEl('end-balloon-wrap','end-balloon-svg','#2196f3',()=>{});
+  },500);
+}
+
+// ── GO ──
+document.getElementById('go-btn').addEventListener('click',()=>{
+  const btn=document.getElementById('go-btn');
+  btn.style.pointerEvents='none';
+  popBalloonEl('start-balloon-wrap','start-balloon-svg','#e82020', startGame);
+});
+
+// ── AGAIN ──
+document.getElementById('again-btn').addEventListener('click',()=>{
+  const btn=document.getElementById('again-btn');
+  btn.style.pointerEvents='none';
+  setTimeout(()=>{ btn.style.pointerEvents=''; startGame(); }, 80);
+});
 </script>
 </body>
 </html>
