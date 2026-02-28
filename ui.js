@@ -1,22 +1,3 @@
-/**
- * Updates the score display in the DOM.
- */
-export function updateScoreUI(score) {
-    const scoreValue = document.getElementById('score-value');
-    if (scoreValue) scoreValue.innerText = score;
-}
-
-/**
- * Shows the main game UI.
- */
-export function showGameUI() {
-    document.getElementById('score-board').style.display = 'block';
-}
-
-/**
- * Triggers the flash overlay animation.
- */
-export function triggerFlash() {
-    const flash = document.getElementById('flash');
-    flash.classList.add('pop');
-}
+export function updateScoreUI(score) { document.getElementById('score-value').innerText = score; }
+export function showGameUI() { document.getElementById('score-board').style.display = 'block'; }
+export function triggerFlash() { document.getElementById('flash').classList.add('pop'); }

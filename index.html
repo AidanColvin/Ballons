@@ -7,31 +7,27 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div id="score-board" style="display:none;">Score: <span id="score-value">0</span></div>
-    <div id="flash"></div>
-
-    <div id="balloon-group">
+    <div id="score-board" style="display:none; position:fixed; top:20px; left:20px; font-size:2rem; font-weight:bold; z-index:100;">
+        Score: <span id="score-value">0</span>
+    </div>
+    <div id="flash" style="position:fixed; inset:0; background:rgba(220,30,30,0.45); opacity:0; pointer-events:none; border-radius:50%; z-index:50;"></div>
+    <div id="balloon-group" style="position:absolute; left:50%; bottom:80px; transform:translateX(-50%); z-index:60;">
         <svg id="balloon-svg" width="90" height="150" viewBox="0 0 90 150">
             <ellipse cx="45" cy="48" rx="40" ry="46" fill="#d32f2f"/>
             <path d="M45 101 Q38 118 46 132 Q52 143 45 150" stroke="#c0392b" stroke-width="1.5" fill="none"/>
         </svg>
     </div>
-
     <script type="module">
         import { startSpawning } from './game.js';
         import { triggerFlash } from './ui.js';
-
-        // Intro Logic: Watch the red balloon
         const introB = document.getElementById('balloon-group');
+        introB.style.animation = "floatUpIntro 3.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards";
         function checkIntro() {
             if (introB.getBoundingClientRect().bottom <= 0) {
                 introB.style.display = 'none';
                 triggerFlash();
                 setTimeout(startSpawning, 500);
-            } else {
-                requestAnimationFrame(checkIntro);
-            }
+            } else { requestAnimationFrame(checkIntro); }
         }
         requestAnimationFrame(checkIntro);
     </script>
