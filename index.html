@@ -7,29 +7,61 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="score-board" style="display:none; position:fixed; top:20px; left:20px; font-size:2rem; font-weight:bold; z-index:100;">
-        Score: <span id="score-value">0</span>
-    </div>
-    <div id="flash" style="position:fixed; inset:0; background:rgba(220,30,30,0.45); opacity:0; pointer-events:none; border-radius:50%; z-index:50;"></div>
-    <div id="balloon-group" style="position:absolute; left:50%; bottom:80px; transform:translateX(-50%); z-index:60;">
-        <svg id="balloon-svg" width="90" height="150" viewBox="0 0 90 150">
+
+<div id="score-board" style="display:none;">
+    Score: <span id="score-value">0</span>
+</div>
+
+<div id="scene">
+    <div id="flash"></div>
+
+    <div id="balloon-group">
+        <svg id="balloon-svg" width="90" height="150" viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg">
             <ellipse cx="45" cy="48" rx="40" ry="46" fill="#d32f2f"/>
-            <path d="M45 101 Q38 118 46 132 Q52 143 45 150" stroke="#c0392b" stroke-width="1.5" fill="none"/>
+            <ellipse cx="30" cy="25" rx="12" ry="16" fill="rgba(255,255,255,0.22)" transform="rotate(-20 30 25)"/>
+            <path d="M41 93 Q45 100 49 93" stroke="#b71c1c" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M45 101 Q38 118 46 132 Q52 143 45 150" stroke="#c0392b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
         </svg>
     </div>
-    <script type="module">
-        import { startSpawning } from './game.js';
-        import { triggerFlash } from './ui.js';
-        const introB = document.getElementById('balloon-group');
-        introB.style.animation = "floatUpIntro 3.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards";
-        function checkIntro() {
-            if (introB.getBoundingClientRect().bottom <= 0) {
-                introB.style.display = 'none';
-                triggerFlash();
-                setTimeout(startSpawning, 500);
-            } else { requestAnimationFrame(checkIntro); }
+</div>
+
+<script type="module">
+    import { startSpawning } from './game.js';
+    import { triggerFlash, showGameUI } from './ui.js';
+
+    const balloonGroup = document.getElementById('balloon-group');
+    let popped = false;
+
+    /**
+     * monitors the intro balloon position
+     * triggers the transition to gameplay when off-screen
+     */
+    function checkIntroPop() {
+        if (popped) return;
+        const rect = balloonGroup.getBoundingClientRect();
+        
+        if (rect.bottom <= 0) {
+            popped = true;
+            transitionToGame();
+            return;
         }
-        requestAnimationFrame(checkIntro);
-    </script>
+        requestAnimationFrame(checkIntroPop);
+    }
+
+    /**
+     * handles the visual transition
+     * pops the flash and starts the game logic
+     */
+    function transitionToGame() {
+        balloonGroup.style.display = 'none';
+        triggerFlash();
+        showGameUI();
+        // start the modular game loop
+        startSpawning();
+    }
+
+    // Start monitoring after the initial delay
+    setTimeout(() => requestAnimationFrame(checkIntroPop), 800);
+</script>
 </body>
 </html>
