@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Balloons</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="score-board" style="display:none;">Score: <span id="score-value">0</span></div>
+    <div id="flash"></div>
+
+    <div id="balloon-group">
+        <svg id="balloon-svg" width="90" height="150" viewBox="0 0 90 150">
+            <ellipse cx="45" cy="48" rx="40" ry="46" fill="#d32f2f"/>
+            <path d="M45 101 Q38 118 46 132 Q52 143 45 150" stroke="#c0392b" stroke-width="1.5" fill="none"/>
+        </svg>
+    </div>
+
+    <script type="module">
+        import { startSpawning } from './game.js';
+        import { triggerFlash } from './ui.js';
+
+        // Intro Logic: Watch the red balloon
+        const introB = document.getElementById('balloon-group');
+        function checkIntro() {
+            if (introB.getBoundingClientRect().bottom <= 0) {
+                introB.style.display = 'none';
+                triggerFlash();
+                setTimeout(startSpawning, 500);
+            } else {
+                requestAnimationFrame(checkIntro);
+            }
+        }
+        requestAnimationFrame(checkIntro);
+    </script>
+</body>
+</html>
